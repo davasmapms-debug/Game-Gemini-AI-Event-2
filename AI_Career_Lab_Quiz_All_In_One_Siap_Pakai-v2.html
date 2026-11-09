@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Career Lab — Multiplayer Quiz Platform (All-in-One HTML)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #090d16;
+      color: #f8fafc;
+    }
+    @media print {
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 text-white selection:bg-amber-400 selection:text-slate-950">
+  <div id="app"></div>
+
+  <script>
+    // ============================================================================
+    // 20 SOAL AI CAREER LAB: FROM CV TO INTERVIEW WITH GEMINI
+    // KUNCI JAWABAN TERACAK SEIMBANG (A=4, B=4, C=4, D=4, E=4)
+    // ============================================================================
+    const DEFAULT_QUESTIONS = [
+  {
+    "no": 1,
+    "text": "Dalam proses rekrutmen modern, perusahaan lebih mengutamakan Skill Inventory dibandingkan Degree Bias. Apa implikasi utama dari prinsip tersebut?",
+    "options": {
+      "A": "Perusahaan menilai kapabilitas teknis dan interpersonal yang terbukti mampu menyelesaikan tantangan bisnis.",
+      "B": "Perusahaan mengutamakan kesesuaian jurusan dengan posisi pekerjaan.",
+      "C": "Perusahaan hanya mempertimbangkan nilai akademik dan IPK pelamar.",
+      "D": "Perusahaan lebih mengutamakan pengalaman kerja dibandingkan seluruh bentuk pendidikan.",
+      "E": "Perusahaan hanya merekrut kandidat yang memiliki sertifikasi profesional."
+    },
+    "correct": "A",
+    "old_correct": "C"
+  },
+  {
+    "no": 2,
+    "text": "Seorang mahasiswa mencantumkan kemampuan digital marketing dalam CV. Namun, ia tidak memiliki proyek, portofolio, atau hasil pekerjaan yang dapat membuktikan kemampuan tersebut. Prinsip fundamental karier apa yang belum diterapkan?",
+    "options": {
+      "A": "Degree Bias.",
+      "B": "Skill Inventory.",
+      "C": "Career Alignment.",
+      "D": "Industry Mapping.",
+      "E": "Evidence-Based Profile."
+    },
+    "correct": "E",
+    "old_correct": "B"
+  },
+  {
+    "no": 3,
+    "text": "Seorang mahasiswa ingin melamar sebagai Social Media Specialist. Ia memiliki pengalaman organisasi, tetapi sebagian besar deskripsi pengalamannya tidak berkaitan dengan kebutuhan posisi tersebut. Langkah paling tepat berdasarkan prinsip keselarasan karier adalah ...",
+    "options": {
+      "A": "Memasukkan seluruh pengalaman organisasi tanpa mempertimbangkan relevansinya.",
+      "B": "Menyesuaikan profil dan menonjolkan kompetensi yang relevan dengan kebutuhan industri serta posisi yang dilamar.",
+      "C": "Menghapus seluruh pengalaman organisasi dan hanya mencantumkan pendidikan.",
+      "D": "Mengutamakan pengalaman yang memiliki jabatan tertinggi meskipun tidak relevan.",
+      "E": "Menambahkan sebanyak mungkin keterampilan populer agar CV terlihat unggul."
+    },
+    "correct": "B",
+    "old_correct": "C"
+  },
+  {
+    "no": 4,
+    "text": "Apa fungsi utama Applicant Tracking System (ATS) dalam proses rekrutmen modern?",
+    "options": {
+      "A": "Melakukan wawancara otomatis dan menentukan kepribadian kandidat.",
+      "B": "Menggantikan seluruh tugas HRD dalam proses seleksi karyawan.",
+      "C": "Menilai kemampuan komunikasi kandidat melalui rekaman suara.",
+      "D": "Menyaring CV secara otomatis sebelum dokumen dibaca oleh HRD.",
+      "E": "Menentukan besaran gaji berdasarkan pengalaman kandidat."
+    },
+    "correct": "D",
+    "old_correct": "D"
+  },
+  {
+    "no": 5,
+    "text": "Seorang pelamar membuat CV dengan desain dua kolom, banyak ikon, grafik kemampuan, dan elemen visual. Mengapa format tersebut berpotensi kurang optimal untuk sistem ATS berdasarkan rekomendasi materi?",
+    "options": {
+      "A": "ATS hanya dapat membaca CV yang menggunakan format PDF.",
+      "B": "Elemen visual selalu menyebabkan kandidat didiskualifikasi.",
+      "C": "Format tersebut berpotensi mengganggu keterbacaan struktur informasi, sehingga format satu kolom lebih direkomendasikan.",
+      "D": "HRD tidak diperbolehkan membaca CV dengan desain visual.",
+      "E": "ATS hanya menerima CV yang dibuat menggunakan Microsoft Word."
+    },
+    "correct": "C",
+    "old_correct": "C"
+  },
+  {
+    "no": 6,
+    "text": "Dalam menyusun CV ATS-Friendly, seorang kandidat menggunakan heading kreatif seperti My Journey, What I Can Do, dan My Story untuk menggantikan bagian pengalaman, keterampilan, dan pendidikan. Apa kelemahan utama pendekatan tersebut?",
+    "options": {
+      "A": "Heading tersebut berpotensi menyulitkan sistem mengenali kategori informasi karena tidak menggunakan heading standar.",
+      "B": "Heading kreatif membuat CV terlalu panjang.",
+      "C": "Heading kreatif menyebabkan seluruh kata kunci dalam CV terhapus.",
+      "D": "Heading tersebut membuat kandidat dianggap tidak memiliki pengalaman kerja.",
+      "E": "Heading kreatif hanya dapat digunakan oleh kandidat profesional."
+    },
+    "correct": "A",
+    "old_correct": "B"
+  },
+  {
+    "no": 7,
+    "text": "Seorang kandidat memiliki pengalaman yang relevan dengan posisi pekerjaan, tetapi CV-nya tidak menggunakan istilah atau kata kunci yang sesuai dengan deskripsi lowongan. Strategi perbaikan yang paling tepat adalah ...",
+    "options": {
+      "A": "Menambahkan seluruh kata kunci populer tanpa mempertimbangkan pengalaman.",
+      "B": "Mengganti seluruh isi CV dengan deskripsi pekerjaan dari perusahaan.",
+      "C": "Menghapus pengalaman yang tidak memiliki kata kunci identik dengan lowongan.",
+      "D": "Menggunakan istilah teknis sebanyak mungkin agar CV terlihat profesional.",
+      "E": "Melakukan penyesuaian kata kunci berdasarkan deskripsi lowongan dengan tetap mempertahankan kebenaran pengalaman."
+    },
+    "correct": "E",
+    "old_correct": "C"
+  },
+  {
+    "no": 8,
+    "text": "Apa perbedaan mendasar antara penggunaan Gemini AI Career Coach dan penyusunan CV secara manual tanpa bantuan AI?",
+    "options": {
+      "A": "Gemini dapat menjamin kandidat diterima kerja tanpa melalui seleksi.",
+      "B": "Gemini dapat menggantikan pengalaman kerja yang belum dimiliki kandidat.",
+      "C": "Gemini menentukan seluruh kompetensi yang wajib dimiliki kandidat berdasarkan IPK.",
+      "D": "Gemini membantu menstrukturkan gagasan dan menemukan sudut pandang terbaik tanpa mengarang pengalaman fiktif.",
+      "E": "Gemini secara otomatis mengubah seluruh pengalaman mahasiswa menjadi pengalaman profesional."
+    },
+    "correct": "D",
+    "old_correct": "C"
+  },
+  {
+    "no": 9,
+    "text": "Seorang mahasiswa meminta Gemini membuatkan pengalaman kerja selama satu tahun di perusahaan ternama, padahal ia belum pernah bekerja di sana. Berdasarkan prinsip penggunaan Gemini AI Career Coach, tindakan yang paling tepat adalah ...",
+    "options": {
+      "A": "Mengarahkan Gemini untuk mengembangkan pengalaman nyata dari organisasi, proyek kelas, atau kompetisi yang pernah diikuti.",
+      "B": "Mempertahankan pengalaman tersebut selama sesuai dengan posisi yang dilamar.",
+      "C": "Menggunakan pengalaman fiktif tersebut sebagai gambaran kemampuan profesional.",
+      "D": "Menggunakan hasil tersebut karena AI dapat meningkatkan daya saing CV.",
+      "E": "Membiarkan Gemini menentukan pengalaman yang paling menarik bagi HRD."
+    },
+    "correct": "A",
+    "old_correct": "D"
+  },
+  {
+    "no": 10,
+    "text": "Apa keunggulan utama Gemini Canvas dibandingkan interaksi biasa dengan chatbot ketika melakukan penyuntingan CV?",
+    "options": {
+      "A": "Dapat menjamin seluruh isi CV sesuai dengan standar setiap perusahaan.",
+      "B": "Memungkinkan penyuntingan interaktif secara berdampingan, termasuk menyorot bagian tertentu dan menyesuaikan gaya bahasa tanpa mengulang prompt dari awal.",
+      "C": "Secara otomatis mengirimkan CV kepada perusahaan yang sedang membuka lowongan.",
+      "D": "Mengubah seluruh pengalaman menjadi data kuantitatif tanpa membutuhkan informasi pengguna.",
+      "E": "Menggantikan proses evaluasi dan verifikasi CV oleh manusia."
+    },
+    "correct": "B",
+    "old_correct": "B"
+  },
+  {
+    "no": 11,
+    "text": "Dalam penggunaan Gemini Canvas, pengguna ingin memperbaiki satu kalimat pengalaman kerja yang terlalu panjang tanpa mengubah bagian CV lainnya. Fitur yang paling sesuai dengan kebutuhan tersebut adalah ...",
+    "options": {
+      "A": "Mengulang seluruh percakapan dari awal.",
+      "B": "Menghapus seluruh dokumen dan membuat dokumen baru.",
+      "C": "Mengganti seluruh isi dokumen menggunakan satu prompt umum.",
+      "D": "Mengubah format dokumen menjadi gambar agar tidak dapat diedit.",
+      "E": "Mengedit dan menyorot bagian tertentu serta mengatur panjang kalimat secara granular."
+    },
+    "correct": "E",
+    "old_correct": "C"
+  },
+  {
+    "no": 12,
+    "text": "Dalam praktik CV Audit & Job Matching, pengguna memasukkan deskripsi lowongan dan draf pengalaman ke Gemini Canvas. Mengapa kedua informasi tersebut perlu diberikan secara bersamaan?",
+    "options": {
+      "A": "Agar Gemini dapat menentukan perusahaan yang paling terkenal.",
+      "B": "Agar Gemini dapat membuat pengalaman kerja baru berdasarkan deskripsi perusahaan.",
+      "C": "Agar Gemini dapat membandingkan kebutuhan posisi dengan pengalaman kandidat dan menemukan kesenjangan kata kunci.",
+      "D": "Agar Gemini dapat menentukan gaji yang harus diminta kandidat.",
+      "E": "Agar Gemini dapat menghilangkan seluruh pengalaman yang tidak menghasilkan angka."
+    },
+    "correct": "C",
+    "old_correct": "B"
+  },
+  {
+    "no": 13,
+    "text": "Dalam formula XYZ yang digunakan pada materi, unsur yang membentuk penulisan ulang poin pengalaman adalah ...",
+    "options": {
+      "A": "Action Verb + Context + Quantifiable Metric.",
+      "B": "Expertise + Youth + Achievement.",
+      "C": "Experience + Year + Job Description.",
+      "D": "Action Verb + Job Title + Company Name.",
+      "E": "Objective + Experience + Certification."
+    },
+    "correct": "A",
+    "old_correct": "C"
+  },
+  {
+    "no": 14,
+    "text": "Perhatikan dua deskripsi pengalaman berikut.\nDeskripsi 1: Bertanggung jawab mengelola media sosial organisasi.\nDeskripsi 2: Mengembangkan strategi konten media sosial organisasi selama tiga bulan untuk meningkatkan jangkauan audiens sebesar 30%.\nMengapa deskripsi kedua lebih kuat dalam konteks penyusunan CV berbasis bukti?",
+    "options": {
+      "A": "Menggunakan kalimat lebih panjang dan istilah profesional.",
+      "B": "Menggunakan lebih banyak kata kunci yang bersifat umum.",
+      "C": "Menghilangkan tanggung jawab kandidat dan berfokus pada organisasi.",
+      "D": "Menunjukkan tindakan, konteks pekerjaan, serta hasil yang dapat diukur.",
+      "E": "Menggunakan angka untuk menggantikan seluruh penjelasan pengalaman."
+    },
+    "correct": "D",
+    "old_correct": "B"
+  },
+  {
+    "no": 15,
+    "text": "Seorang mahasiswa memiliki pengalaman menjadi ketua pelaksana kegiatan kampus, tetapi kesulitan menjelaskan relevansinya dengan posisi Project Management Intern. Bagaimana Gemini Canvas dapat dimanfaatkan secara tepat?",
+    "options": {
+      "A": "Meminta Gemini mengubah jabatan ketua pelaksana menjadi manajer proyek profesional.",
+      "B": "Meminta Gemini mengidentifikasi kompetensi yang relevan, menyusun ulang poin pengalaman dengan formula XYZ, dan memprediksi pertanyaan seleksi HRD.",
+      "C": "Meminta Gemini menghapus pengalaman organisasi karena bukan pengalaman perusahaan.",
+      "D": "Meminta Gemini menambahkan tanggung jawab yang biasanya dimiliki seorang manajer proyek.",
+      "E": "Meminta Gemini membuat sertifikat pengalaman kerja berdasarkan kegiatan tersebut."
+    },
+    "correct": "B",
+    "old_correct": "C"
+  },
+  {
+    "no": 16,
+    "text": "Apa karakteristik utama Gemini Live yang membuatnya relevan untuk simulasi wawancara kerja?",
+    "options": {
+      "A": "Menghasilkan CV secara otomatis melalui perintah suara.",
+      "B": "Mengubah jawaban wawancara menjadi sertifikat kompetensi.",
+      "C": "Menggantikan HRD dalam menentukan kelulusan wawancara.",
+      "D": "Menghasilkan daftar pertanyaan wawancara tanpa memungkinkan interaksi langsung.",
+      "E": "Menghadirkan percakapan audio dua arah secara alami tanpa jeda mengetik."
+    },
+    "correct": "E",
+    "old_correct": "B"
+  },
+  {
+    "no": 17,
+    "text": "Mengapa latihan mock interview menggunakan Gemini Live dapat membantu mahasiswa mempersiapkan wawancara kerja?",
+    "options": {
+      "A": "Karena Gemini Live dapat menjamin jawaban kandidat selalu benar.",
+      "B": "Karena latihan tersebut membuat kandidat tidak perlu mempelajari profil perusahaan.",
+      "C": "Karena kandidat dapat melatih mental, intonasi, dan kelancaran artikulasi melalui percakapan audio dua arah.",
+      "D": "Karena Gemini Live dapat menggantikan seluruh proses wawancara dengan HRD.",
+      "E": "Karena Gemini Live secara otomatis menentukan kompetensi kandidat berdasarkan suara."
+    },
+    "correct": "C",
+    "old_correct": "C"
+  },
+  {
+    "no": 18,
+    "text": "Dalam wawancara kerja, seorang kandidat ditanya mengenai pengalaman menyelesaikan konflik dalam organisasi. Ia menjawab dengan menceritakan situasi, tugas yang menjadi tanggung jawabnya, tindakan yang dilakukan, dan hasil yang diperoleh. Metode penyusunan jawaban yang paling sesuai adalah ...",
+    "options": {
+      "A": "SMART Method.",
+      "B": "SWOT Analysis.",
+      "C": "XYZ Formula.",
+      "D": "STAR Method.",
+      "E": "Skill Inventory."
+    },
+    "correct": "D",
+    "old_correct": "C"
+  },
+  {
+    "no": 19,
+    "text": "Seorang kandidat menjawab pertanyaan wawancara dengan menceritakan situasi dan tanggung jawabnya secara panjang lebar, tetapi tidak menjelaskan tindakan yang dilakukan maupun hasil akhirnya. Apa kelemahan utama jawaban tersebut jika menggunakan STAR Method?",
+    "options": {
+      "A": "Tidak menunjukkan latar belakang pendidikan kandidat.",
+      "B": "Tidak memperlihatkan kontribusi nyata kandidat dan hasil dari tindakan yang dilakukan.",
+      "C": "Terlalu banyak menggunakan kata kerja aktif.",
+      "D": "Tidak menyebutkan nama perusahaan secara berulang.",
+      "E": "Tidak menjelaskan seluruh pengalaman organisasi kandidat."
+    },
+    "correct": "B",
+    "old_correct": "B"
+  },
+  {
+    "no": 20,
+    "text": "Seorang mahasiswa menggunakan Gemini untuk menyusun CV, melakukan audit kata kunci, memperbaiki deskripsi pengalaman, dan berlatih wawancara. Namun, seluruh hasil AI langsung digunakan tanpa diperiksa kembali. Apa risiko terbesar dari perilaku tersebut?",
+    "options": {
+      "A": "Proses rekrutmen menjadi lebih cepat daripada seharusnya.",
+      "B": "CV menjadi terlalu sederhana untuk dibaca HRD.",
+      "C": "Informasi yang tidak akurat atau tidak sesuai pengalaman nyata dapat masuk ke dalam CV maupun jawaban wawancara.",
+      "D": "ATS tidak dapat mengenali kandidat yang menggunakan AI.",
+      "E": "Kandidat kehilangan seluruh pengalaman yang pernah dimiliki."
+    },
+    "correct": "C",
+    "old_correct": "C"
+  }
+];
+
+    const AVATARS = ['🦊', '🚀', '🦁', '🐼', '🐯', '🐸', '🦄', '🐙', '🦉', '⚡', '🔥', '💎'];
+    const OPTION_COLORS = {
+      A: 'bg-red-500 hover:bg-red-600 border-red-700 text-white',
+      B: 'bg-blue-500 hover:bg-blue-600 border-blue-700 text-white',
+      C: 'bg-amber-400 hover:bg-amber-500 border-amber-600 text-slate-950',
+      D: 'bg-emerald-500 hover:bg-emerald-600 border-emerald-700 text-white',
+      E: 'bg-purple-600 hover:bg-purple-700 border-purple-800 text-white'
+    };
+
+    // Real-time Sync Engine (BroadcastChannel + Storage Event + Optional Supabase Realtime Cloud)
+    const syncChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ai_career_lab_multiplayer_channel_v3') : null;
+    let supabaseClient = null;
+    let cloudChannel = null;
+
+    function getGlobalStore() {
+      const raw = localStorage.getItem('ai_career_lab_store_v3');
+      if (!raw) {
+        const initial = {
+          rooms: {},
+          history: [],
+          recaps: [],
+          failedAttempts: 0,
+          lockedUntil: null,
+          supabaseUrl: '',
+          supabaseKey: ''
+        };
+        localStorage.setItem('ai_career_lab_store_v3', JSON.stringify(initial));
+        return initial;
+      }
+      return JSON.parse(raw);
+    }
+
+    function saveGlobalStore(store, broadcastEvent = 'STATE_UPDATED') {
+      localStorage.setItem('ai_career_lab_store_v3', JSON.stringify(store));
+      if (syncChannel) {
+        syncChannel.postMessage({ type: broadcastEvent, store, timestamp: Date.now() });
+      }
+      if (cloudChannel) {
+        cloudChannel.send({
+          type: 'broadcast',
+          event: 'SYNC_STORE',
+          payload: { store, timestamp: Date.now() }
+        });
+      }
+      renderApp();
+    }
+
+    const state = {
+      view: 'LANDING', // LANDING, OWNER_LOGIN, OWNER_DASHBOARD, PLAYER_ARENA
+      ownerAuthenticated: sessionStorage.getItem('owner_auth_adhnan') === 'true',
+      ownerTab: 'OVERVIEW', // OVERVIEW, LOBBY, BANK_SOAL, RECAP, HISTORY, ANALYTICS, SETTINGS
+      activePin: new URLSearchParams(window.location.search).get('pin') || '',
+      nickname: '',
+      selectedAvatar: '🚀',
+      currentParticipantId: null,
+      errorMsg: '',
+      toastMsg: '',
+      timerPerQuestionSec: 25,
+      searchRecap: '',
+      selectedDetailPlayer: null,
+      nowMs: Date.now()
+    };
+
+    function initSupabaseCloudSync() {
+      const store = getGlobalStore();
+      if (store.supabaseUrl && store.supabaseKey && window.supabase) {
+        try {
+          supabaseClient = window.supabase.createClient(store.supabaseUrl, store.supabaseKey);
+          cloudChannel = supabaseClient.channel('global_quiz_sync_adhnan', {
+            config: { broadcast: { self: false } }
+          });
+          cloudChannel
+            .on('broadcast', { event: 'SYNC_STORE' }, (payload) => {
+              if (payload.payload?.store) {
+                localStorage.setItem('ai_career_lab_store_v3', JSON.stringify(payload.payload.store));
+                renderApp();
+              }
+            })
+            .subscribe();
+        } catch (err) {
+          console.warn('Supabase cloud sync belum aktif:', err);
+        }
+      }
+    }
+    initSupabaseCloudSync();
+
+    if (syncChannel) {
+      syncChannel.onmessage = (ev) => {
+        if (ev.data?.store) {
+          localStorage.setItem('ai_career_lab_store_v3', JSON.stringify(ev.data.store));
+        }
+        if (ev.data?.toast) {
+          showToast(ev.data.toast);
+        }
+        renderApp();
+      };
+    }
+    window.addEventListener('storage', () => renderApp());
+
+    function showToast(msg) {
+      state.toastMsg = msg;
+      renderApp();
+      setTimeout(() => {
+        state.toastMsg = '';
+        renderApp();
+      }, 3000);
+    }
+
+    // Global 200ms Ticker for Synchronized Countdown & Server-Authoritative Question Timer
+    setInterval(() => {
+      state.nowMs = Date.now();
+      const store = getGlobalStore();
+      const room = store.rooms[state.activePin];
+      if (room && room.status === 'PLAYING') {
+        const timerEl = document.getElementById('live-timer-badge');
+        const countdownEl = document.getElementById('live-countdown-overlay');
+        const now = Date.now();
+
+        if (now < room.questionStartTime) {
+          const cd = Math.ceil((room.questionStartTime - now) / 1000);
+          if (countdownEl) {
+            countdownEl.classList.remove('hidden');
+            countdownEl.innerHTML = `
+              <p class="text-xl uppercase tracking-widest text-purple-300 mb-4 font-bold">Bersiap Mengerjakan Serentak!</p>
+              <div class="text-9xl font-black text-amber-400 animate-bounce">${cd > 0 ? cd : 'GO!'}</div>
+            `;
+          }
+        } else {
+          if (countdownEl) countdownEl.classList.add('hidden');
+          const remSec = Math.max(0, Math.ceil((room.questionEndTime - now) / 1000));
+          if (timerEl) {
+            timerEl.textContent = remSec + 's';
+            timerEl.className = 'text-3xl font-black px-4 py-1 rounded-xl ' + (remSec <= 5 ? 'bg-rose-600 animate-pulse' : 'bg-indigo-600');
+          }
+          if (remSec <= 0 && state.ownerAuthenticated && room.transitionMode === 'AUTOMATIC') {
+            hostFinishCurrentQuestion(room.pin);
+          }
+        }
+      }
+    }, 200);
+
+    // ============================================================================
+    // ACTIONS: OWNER LOGIN & ROOM CONTROL
+    // ============================================================================
+    function handleOwnerLogin(accessCode) {
+      const store = getGlobalStore();
+      if (store.lockedUntil && store.lockedUntil > Date.now()) {
+        const waitMin = Math.ceil((store.lockedUntil - Date.now()) / 60000);
+        state.errorMsg = `Terlalu banyak percobaan gagal. Akun dikunci selama ${waitMin} menit.`;
+        renderApp();
+        return;
+      }
+
+      if (accessCode.trim() !== 'Adhnan') {
+        store.failedAttempts = (store.failedAttempts || 0) + 1;
+        if (store.failedAttempts >= 5) {
+          store.lockedUntil = Date.now() + 15 * 60 * 1000;
+        }
+        saveGlobalStore(store);
+        state.errorMsg = `Kode akses salah! Sisa percobaan: ${Math.max(0, 5 - store.failedAttempts)}`;
+        renderApp();
+        return;
+      }
+
+      store.failedAttempts = 0;
+      store.lockedUntil = null;
+      sessionStorage.setItem('owner_auth_adhnan', 'true');
+      state.ownerAuthenticated = true;
+      state.errorMsg = '';
+      state.view = 'OWNER_DASHBOARD';
+      saveGlobalStore(store);
+    }
+
+    function handleOwnerLogout() {
+      sessionStorage.removeItem('owner_auth_adhnan');
+      state.ownerAuthenticated = false;
+      state.view = 'LANDING';
+      renderApp();
+    }
+
+    function createRoom() {
+      const store = getGlobalStore();
+      const pin = Math.floor(100000 + Math.random() * 900000).toString();
+      store.rooms[pin] = {
+        pin,
+        quizTitle: 'AI CAREER LAB: FROM CV TO INTERVIEW WITH GEMINI',
+        hostName: 'Adhnan',
+        status: 'WAITING', // WAITING, PLAYING, PAUSED, QUESTION_RESULT, FINISHED, CLOSED
+        isLocked: false,
+        allowLateJoin: false,
+        transitionMode: 'HOST_CONTROLLED', // HOST_CONTROLLED, AUTOMATIC
+        timerSec: Number(state.timerPerQuestionSec) || 25,
+        currentQuestionIndex: 0,
+        questionStartTime: null,
+        questionEndTime: null,
+        pausedRemainingMs: null,
+        createdAt: new Date().toISOString(),
+        participants: {}
+      };
+      state.activePin = pin;
+      state.ownerTab = 'LOBBY';
+      saveGlobalStore(store, 'ROOM_CREATED');
+      setTimeout(() => renderQRCode(pin), 100);
+    }
+
+    function renderQRCode(pin) {
+      const qrContainer = document.getElementById('host-qr-box');
+      if (qrContainer && window.QRCode) {
+        qrContainer.innerHTML = '';
+        const joinLink = window.location.origin + window.location.pathname + '?pin=' + pin;
+        new QRCode(qrContainer, {
+          text: joinLink,
+          width: 128,
+          height: 128,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff'
+        });
+      }
+    }
+
+    function joinRoomAsPlayer(pin, nickname, avatar) {
+      const cleanPin = pin.trim();
+      const cleanName = nickname.trim();
+      const store = getGlobalStore();
+      const room = store.rooms[cleanPin];
+
+      if (!room) {
+        state.errorMsg = 'PIN Permainan tidak ditemukan! Pastikan Host sudah membuat Room.';
+        renderApp();
+        return;
+      }
+      if (room.status === 'CLOSED') {
+        state.errorMsg = 'Room ini sudah ditutup oleh Host.';
+        renderApp();
+        return;
+      }
+
+      // Cek apakah peserta melakukan Reconnect dari sesi browser yang sama
+      const savedPlayerId = localStorage.getItem(`player_session_${cleanPin}`);
+      if (savedPlayerId && room.participants[savedPlayerId]) {
+        const existingP = room.participants[savedPlayerId];
+        if (existingP.isRemoved) {
+          state.errorMsg = 'Anda telah dikeluarkan dari Room oleh Host.';
+          renderApp();
+          return;
+        }
+        existingP.connectionStatus = 'ONLINE';
+        state.activePin = cleanPin;
+        state.currentParticipantId = savedPlayerId;
+        state.view = 'PLAYER_ARENA';
+        state.errorMsg = '';
+        saveGlobalStore(store, 'PLAYER_RECONNECTED');
+        return;
+      }
+
+      if (!cleanName) {
+        state.errorMsg = 'Nickname wajib diisi!';
+        renderApp();
+        return;
+      }
+      if (room.isLocked) {
+        state.errorMsg = 'Room sedang dikunci oleh Host.';
+        renderApp();
+        return;
+      }
+      if (room.status !== 'WAITING' && !room.allowLateJoin) {
+        state.errorMsg = 'Permainan sudah dimulai dan Late Join dinonaktifkan.';
+        renderApp();
+        return;
+      }
+
+      const duplicate = Object.values(room.participants).find(
+        (p) => !p.isRemoved && p.nickname.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (duplicate) {
+        state.errorMsg = 'Nickname sudah dipakai peserta lain di Room ini!';
+        renderApp();
+        return;
+      }
+
+      const pid = 'p_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      room.participants[pid] = {
+        id: pid,
+        nickname: cleanName,
+        avatar: avatar || '🚀',
+        connectionStatus: 'ONLINE',
+        readyStatus: 'WAITING',
+        isRemoved: false,
+        totalScore: 0,
+        correctCount: 0,
+        wrongCount: 0,
+        totalResponseTimeMs: 0,
+        currentRank: 0,
+        previousRank: 0,
+        answers: {}
+      };
+
+      localStorage.setItem(`player_session_${cleanPin}`, pid);
+      state.activePin = cleanPin;
+      state.currentParticipantId = pid;
+      state.view = 'PLAYER_ARENA';
+      state.errorMsg = '';
+      if (syncChannel) {
+        syncChannel.postMessage({ toast: `${avatar} ${cleanName} bergabung ke Room!` });
+      }
+      saveGlobalStore(store, 'PLAYER_JOINED');
+    }
+
+    function togglePlayerReady() {
+      const store = getGlobalStore();
+      const room = store.rooms[state.activePin];
+      if (!room) return;
+      const p = room.participants[state.currentParticipantId];
+      if (!p) return;
+      p.readyStatus = p.readyStatus === 'READY' ? 'WAITING' : 'READY';
+      saveGlobalStore(store, 'PLAYER_READY_CHANGED');
+    }
+
+    function hostStartGame(pin, force = false) {
+      const store = getGlobalStore();
+      const room = store.rooms[pin];
+      if (!room) return;
+      const activePlayers = Object.values(room.participants).filter((p) => !p.isRemoved);
+      if (activePlayers.length === 0) {
+        alert('Belum ada peserta yang bergabung di dalam Room!');
+        return;
+      }
+      const unready = activePlayers.filter((p) => p.readyStatus !== 'READY');
+      if (unready.length > 0 && !force) {
+        if (!confirm(`Masih ada ${unready.length} peserta yang belum menekan tombol SIAP. Tetap mulai permainan serentak?`)) {
+          return;
+        }
+      }
+
+      const now = Date.now();
+      room.status = 'PLAYING';
+      room.currentQuestionIndex = 0;
+      room.questionStartTime = now + 3500; // Countdown 3-2-1-GO!
+      room.questionEndTime = room.questionStartTime + room.timerSec * 1000;
+      saveGlobalStore(store, 'GAME_STARTED');
+    }
+
+    function hostPauseOrResume(pin) {
+      const store = getGlobalStore();
+      const room = store.rooms[pin];
+      if (!room) return;
+      const now = Date.now();
+
+      if (room.status === 'PLAYING') {
+        room.pausedRemainingMs = Math.max(1000, room.questionEndTime - now);
+        room.status = 'PAUSED';
+      } else if (room.status === 'PAUSED') {
+        const rem = room.pausedRemainingMs || 15000;
+        room.questionStartTime = now;
+        room.questionEndTime = now + rem;
+        room.pausedRemainingMs = null;
+        room.status = 'PLAYING';
+      }
+      saveGlobalStore(store, 'GAME_PAUSED_OR_RESUMED');
+    }
+
+    function toggleLockRoom(pin) {
+      const store = getGlobalStore();
+      const room = store.rooms[pin];
+      if (!room) return;
+      room.isLocked = !room.isLocked;
+      saveGlobalStore(store, 'ROOM_LOCK_TOGGLED');
+    }
+
+    function submitPlayerAnswer(optionLabel) {
+      const now = Date.now();
+      const store = getGlobalStore();
+      const room = store.rooms[state.activePin];
+      if (!room || room.status !== 'PLAYING') return;
+
+      const p = room.participants[state.currentParticipantId];
+      if (!p) return;
+
+      const qObj = DEFAULT_QUESTIONS[room.currentQuestionIndex];
+      if (!qObj || p.answers[qObj.no]) return;
+
+      if (now > room.questionEndTime + 500) {
+        alert('Waktu menjawab telah habis!');
+        return;
+      }
+
+      const totalDurationMs = room.questionEndTime - room.questionStartTime;
+      const clampedNow = Math.max(room.questionStartTime, Math.min(now, room.questionEndTime));
+      const remainingMs = Math.max(0, room.questionEndTime - clampedNow);
+      const responseTimeMs = Math.max(100, clampedNow - room.questionStartTime);
+
+      const isCorrect = optionLabel === qObj.correct;
+      let pointsAwarded = 0;
+      if (isCorrect) {
+        // Rumus Skor Resmi: Skor = 500 + (500 * sisa_waktu / total_waktu)
+        pointsAwarded = Math.round(500 + 500 * (remainingMs / totalDurationMs));
+      }
+
+      p.answers[qObj.no] = {
+        questionNo: qObj.no,
+        selectedLabel: optionLabel,
+        isCorrect,
+        pointsAwarded,
+        responseTimeMs
+      };
+      p.totalScore += pointsAwarded;
+      if (isCorrect) p.correctCount += 1;
+      else p.wrongCount += 1;
+      p.totalResponseTimeMs += responseTimeMs;
+
+      saveGlobalStore(store, 'ANSWER_SUBMITTED');
+    }
+
+    function recalculateLeaderboard(room) {
+      const activePlayers = Object.values(room.participants).filter((p) => !p.isRemoved);
+      activePlayers.sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        if (b.correctCount !== a.correctCount) return b.correctCount - a.correctCount;
+        return a.totalResponseTimeMs - b.totalResponseTimeMs;
+      });
+      activePlayers.forEach((p, idx) => {
+        p.previousRank = p.currentRank === 0 ? idx + 1 : p.currentRank;
+        p.currentRank = idx + 1;
+      });
+      return activePlayers;
+    }
+
+    function hostFinishCurrentQuestion(pin) {
+      const store = getGlobalStore();
+      const room = store.rooms[pin];
+      if (!room) return;
+      recalculateLeaderboard(room);
+      room.status = 'QUESTION_RESULT';
+      saveGlobalStore(store, 'QUESTION_FINISHED');
+    }
+
+    function hostNextQuestion(pin) {
+      const store = getGlobalStore();
+      const room = store.rooms[pin];
+      if (!room) return;
+
+      const nextIdx = room.currentQuestionIndex + 1;
+      if (nextIdx >= DEFAULT_QUESTIONS.length) {
+        finalizeGameSession(store, room);
+        return;
+      }
+
+      const now = Date.now();
+      room.status = 'PLAYING';
+      room.currentQuestionIndex = nextIdx;
+      room.questionStartTime = now + 3000;
+      room.questionEndTime = room.questionStartTime + room.timerSec * 1000;
+      saveGlobalStore(store, 'NEXT_QUESTION');
+    }
+
+    function finalizeGameSession(store, room) {
+      const ranked = recalculateLeaderboard(room);
+      room.status = 'FINISHED';
+      room.finishedAt = new Date().toISOString();
+
+      let sumScore = 0;
+      let sumAcc = 0;
+      ranked.forEach((p, idx) => {
+        const unanswered = Math.max(0, 20 - (p.correctCount + p.wrongCount));
+        const acc = Number(((p.correctCount / 20) * 100).toFixed(1));
+        const answered = p.correctCount + p.wrongCount;
+        const avgTimeSec = answered > 0 ? Number((p.totalResponseTimeMs / answered / 1000).toFixed(2)) : 0;
+
+        sumScore += p.totalScore;
+        sumAcc += acc;
+
+        store.recaps.unshift({
+          id: 'rec_' + Date.now() + '_' + idx,
+          pin: room.pin,
+          quizTitle: room.quizTitle,
+          nickname: p.nickname,
+          avatar: p.avatar,
+          finalScore: p.totalScore,
+          finalRank: idx + 1,
+          correctAnswers: p.correctCount,
+          wrongAnswers: p.wrongCount,
+          unanswered,
+          accuracyPercentage: acc,
+          avgResponseTimeSec: avgTimeSec,
+          answersDetail: p.answers,
+          date: new Date().toLocaleString('id-ID')
+        });
+      });
+
+      store.history.unshift({
+        pin: room.pin,
+        quizTitle: room.quizTitle,
+        date: new Date().toLocaleString('id-ID'),
+        totalPlayers: ranked.length,
+        avgScore: ranked.length > 0 ? Math.round(sumScore / ranked.length) : 0,
+        avgAccuracy: ranked.length > 0 ? Number((sumAcc / ranked.length).toFixed(1)) : 0,
+        top3: ranked.slice(0, 3).map((x) => `${x.avatar} ${x.nickname} (${x.totalScore} pts)`)
+      });
+
+      saveGlobalStore(store, 'GAME_FINISHED');
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+      }
+    }
+
+    function exportRecapsToCSV() {
+      const store = getGlobalStore();
+      if (store.recaps.length === 0) {
+        alert('Belum ada data rekap peserta untuk diekspor.');
+        return;
+      }
+      const headers = ['Nickname', 'PIN Room', 'Peringkat', 'Skor Akhir', 'Benar', 'Salah', 'Tidak Dijawab', 'Akurasi (%)', 'Rata-rata Waktu (detik)', 'Tanggal'];
+      const rows = store.recaps.map((r) => [
+        `"${r.nickname}"`,
+        r.pin,
+        r.finalRank,
+        r.finalScore,
+        r.correctAnswers,
+        r.wrongAnswers,
+        r.unanswered,
+        `${r.accuracyPercentage}%`,
+        `${r.avgResponseTimeSec}s`,
+        `"${r.date}"`
+      ]);
+      const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csv));
+      link.setAttribute('download', `Laporan_Peserta_AI_Career_Lab_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+    }
+
+    // ============================================================================
+    // RENDER ENGINE: LANDING, OWNER LOGIN, HOST DASHBOARD, PLAYER ARENA
+    // ============================================================================
+    function renderApp() {
+      const root = document.getElementById('app');
+      if (!root) return;
+      const store = getGlobalStore();
+
+      const toastHtml = state.toastMsg
+        ? `<div class="fixed top-4 right-4 z-50 bg-emerald-500 text-slate-950 font-black px-5 py-3 rounded-2xl shadow-2xl animate-bounce">${state.toastMsg}</div>`
+        : '';
+
+      if (state.view === 'LANDING') {
+        root.innerHTML = `
+          ${toastHtml}
+          <div class="min-h-screen flex flex-col justify-between p-6">
+            <header class="max-w-6xl w-full mx-auto flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-xl shadow-lg">Q</div>
+                <div>
+                  <span class="font-black text-lg tracking-tight text-white">AI CAREER LAB</span>
+                  <span class="block text-[11px] text-purple-300 uppercase tracking-widest">From CV to Interview with Gemini</span>
+                </div>
+              </div>
+              <button onclick="state.view = state.ownerAuthenticated ? 'OWNER_DASHBOARD' : 'OWNER_LOGIN'; state.errorMsg=''; renderApp();" class="text-xs font-bold bg-white/10 hover:bg-white/20 text-purple-200 px-4 py-2.5 rounded-xl border border-white/15">
+                🔒 Owner / Host Login
+              </button>
+            </header>
+
+            <main class="max-w-md w-full mx-auto my-auto py-8">
+              <div class="bg-slate-900/90 backdrop-blur-xl border border-white/15 rounded-3xl p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                  <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-widest">Live Multiplayer Quiz</span>
+                  <h1 class="text-3xl font-black text-white mt-3">JOIN GAME</h1>
+                  <p class="text-xs text-slate-400 mt-1">Masukkan PIN Room dari Host untuk bergabung ke Lobby serentak</p>
+                </div>
+
+                ${state.errorMsg ? `<div class="mb-4 bg-rose-500/20 border border-rose-500/50 text-rose-200 text-xs font-bold p-3.5 rounded-2xl text-center">⚠️ ${state.errorMsg}</div>` : ''}
+
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">PIN Permainan</label>
+                    <input id="input-pin" type="text" maxlength="8" value="${state.activePin}" oninput="state.activePin = this.value" placeholder="Contoh: 482910" class="w-full bg-slate-950 border-2 border-indigo-500/40 focus:border-amber-400 rounded-2xl px-4 py-3 text-center text-2xl font-black tracking-widest text-amber-400 outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Nickname Peserta</label>
+                    <input id="input-nick" type="text" maxlength="25" value="${state.nickname}" oninput="state.nickname = this.value" placeholder="Nama lengkap / panggilan..." class="w-full bg-slate-950 border border-white/15 focus:border-amber-400 rounded-2xl px-4 py-3 text-white font-bold outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-1.5">Pilih Avatar</label>
+                    <div class="grid grid-cols-6 gap-2">
+                      ${AVATARS.map(av => `
+                        <button type="button" onclick="state.selectedAvatar='${av}'; renderApp();" class="text-2xl p-2 rounded-xl border transition ${state.selectedAvatar === av ? 'bg-amber-400/20 border-amber-400 scale-110' : 'bg-slate-950 border-white/10 opacity-60 hover:opacity-100'}">${av}</button>
+                      `).join('')}
+                    </div>
+                  </div>
+                  <button onclick="joinRoomAsPlayer(state.activePin, state.nickname, state.selectedAvatar)" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-lg py-4 rounded-2xl shadow-xl transition mt-2">
+                    MASUK KE ROOM LOBBY 🚀
+                  </button>
+                </div>
+              </div>
+            </main>
+
+            <footer class="text-center text-xs text-slate-500">
+              20 Soal Pilihan Ganda (A–E) • Synchronized Timer • Real-Time Leaderboard
+            </footer>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.view === 'OWNER_LOGIN') {
+        root.innerHTML = `
+          <div class="min-h-screen flex items-center justify-center p-6">
+            <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+              <div class="text-center mb-6">
+                <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold uppercase tracking-widest">Private Owner Access</span>
+                <h1 class="text-2xl font-black text-white mt-3">OWNER LOGIN</h1>
+                <p class="text-xs text-slate-400 mt-1">Masukkan kode akses pemilik untuk membuka Host Control & Rekap Peserta.</p>
+              </div>
+              ${state.errorMsg ? `<div class="mb-4 bg-rose-500/20 border border-rose-500/50 text-rose-300 text-xs font-bold p-3.5 rounded-xl text-center">${state.errorMsg}</div>` : ''}
+              <form onsubmit="event.preventDefault(); handleOwnerLogin(document.getElementById('owner-code-input').value);" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Kode Akses Pemilik</label>
+                  <input id="owner-code-input" type="password" required placeholder="Masukkan kode pemilik..." class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-2xl px-4 py-3.5 text-white font-bold outline-none" />
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-2xl shadow-lg">
+                  BUKA DASHBOARD PEMILIK 🔓
+                </button>
+              </form>
+              <div class="mt-6 text-center">
+                <button onclick="state.view='LANDING'; state.errorMsg=''; renderApp();" class="text-xs text-slate-400 hover:text-white">← Kembali ke Halaman Join Peserta</button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.view === 'OWNER_DASHBOARD') {
+        if (!state.ownerAuthenticated) {
+          state.view = 'OWNER_LOGIN';
+          renderApp();
+          return;
+        }
+        renderOwnerDashboard(root, store, toastHtml);
+        if (state.ownerTab === 'LOBBY' && state.activePin) {
+          setTimeout(() => renderQRCode(state.activePin), 50);
+        }
+        return;
+      }
+
+      if (state.view === 'PLAYER_ARENA') {
+        renderPlayerArena(root, store, toastHtml);
+        return;
+      }
+    }
+
+    function renderOwnerDashboard(root, store, toastHtml) {
+      const room = store.rooms[state.activePin];
+      const activePlayers = room ? Object.values(room.participants).filter((p) => !p.isRemoved) : [];
+      const readyCount = activePlayers.filter((p) => p.readyStatus === 'READY').length;
+      const currentQ = room ? DEFAULT_QUESTIONS[room.currentQuestionIndex] : null;
+      const answeredCount = room && currentQ
+        ? activePlayers.filter((p) => p.answers && p.answers[currentQ.no]).length
+        : 0;
+
+      root.innerHTML = `
+        ${toastHtml}
+        <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+          <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-6 flex flex-col justify-between shrink-0 no-print">
+            <div class="space-y-6">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-widest text-amber-400">OWNER: ADHNAN</span>
+                <h1 class="text-2xl font-black text-white">Host Dashboard</h1>
+              </div>
+              <nav class="space-y-1.5 text-sm">
+                <button onclick="state.ownerTab='OVERVIEW'; renderApp();" class="w-full text-left px-4 py-3 rounded-xl font-bold ${state.ownerTab==='OVERVIEW' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}">📊 Overview & Buat Room</button>
+                <button onclick="state.ownerTab='LOBBY'; renderApp();" class="w-full text-left px-4 py-3 rounded-xl font-bold ${state.ownerTab==='LOBBY' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}">🎮 Host Lobby & Kontrol</button>
+                <button onclick="state.ownerTab='BANK_SOAL'; renderApp();" class="w-full text-left px-4 py-3 rounded-xl font-bold ${state.ownerTab==='BANK_SOAL' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}">📝 20 Soal & Kunci Acak</button>
+                <button onclick="state.ownerTab='RECAP'; renderApp();" class="w-full text-left px-4 py-3 rounded-xl font-bold ${state.ownerTab==='RECAP' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}">📋 Rekap & Detail Peserta</button>
+                <button onclick="state.ownerTab='HISTORY'; renderApp();" class="w-full text-left px-4 py-3 rounded-xl font-bold ${state.ownerTab==='HISTORY' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}">🕓 Riwayat Permainan</button>
+              </nav>
+            </div>
+            <div class="space-y-2 pt-6 border-t border-slate-800">
+              <button onclick="window.open(window.location.pathname + (state.activePin ? '?pin=' + state.activePin : ''), '_blank')" class="w-full bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white font-bold py-2.5 rounded-xl text-xs">
+                🗔 Buka Tab Simulasi Peserta
+              </button>
+              <button onclick="exportRecapsToCSV()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs">
+                ⬇ Export CSV / Excel
+              </button>
+              <button onclick="window.print()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs">
+                🖨 Cetak / Export PDF
+              </button>
+              <button onclick="handleOwnerLogout()" class="w-full bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white font-bold py-2.5 rounded-xl text-xs">
+                🚪 Logout Owner
+              </button>
+            </div>
+          </aside>
+
+          <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
+            ${state.ownerTab === 'OVERVIEW' ? `
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                  <p class="text-xs text-slate-400">Paket Kuis Aktif</p>
+                  <p class="text-2xl font-black text-white mt-1">AI Career Lab</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                  <p class="text-xs text-slate-400">Jumlah Pertanyaan</p>
+                  <p class="text-2xl font-black text-amber-400 mt-1">20 Soal (A–E)</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                  <p class="text-xs text-slate-400">Sesi Selesai</p>
+                  <p class="text-2xl font-black text-indigo-400 mt-1">${store.history.length}</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                  <p class="text-xs text-slate-400">Total Rekap Peserta</p>
+                  <p class="text-2xl font-black text-emerald-400 mt-1">${store.recaps.length}</p>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                  <div>
+                    <span class="text-xs font-bold uppercase tracking-widest text-amber-400">MODUL RESMI SIAP DIMAINKAN</span>
+                    <h2 class="text-2xl font-black text-white mt-1">AI CAREER LAB: FROM CV TO INTERVIEW WITH GEMINI</h2>
+                    <p class="text-sm text-slate-400 mt-1">20 Soal Pilihan Ganda (A, B, C, D, E) dengan Kunci Jawaban Teracak Proporsional (Masing-masing 4 A, 4 B, 4 C, 4 D, 4 E).</p>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <label class="text-xs font-bold text-slate-400">Durasi Timer per Soal:</label>
+                    <select onchange="state.timerPerQuestionSec=Number(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-black text-amber-400">
+                      ${[10, 15, 20, 25, 30, 45, 60].map(s => `<option value="${s}" ${state.timerPerQuestionSec===s?'selected':''}>${s} Detik</option>`).join('')}
+                    </select>
+                  </div>
+                </div>
+                <button onclick="createRoom()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-8 py-4 rounded-2xl text-lg shadow-xl">
+                  + CREATE ROOM & GENERATE PIN BARU
+                </button>
+              </div>
+            ` : ''}
+
+            ${state.ownerTab === 'LOBBY' ? (!room ? `
+              <div class="bg-slate-900 border border-slate-800 p-10 rounded-3xl text-center">
+                <p class="text-lg font-bold text-slate-300">Belum ada Room aktif. Silakan buat Room terlebih dahulu.</p>
+                <button onclick="createRoom()" class="mt-4 bg-amber-400 text-slate-950 font-black px-6 py-3 rounded-xl">+ Buat Room Sekarang</button>
+              </div>
+            ` : `
+              <div class="bg-gradient-to-r from-indigo-950 via-purple-900 to-slate-900 border border-white/15 p-8 rounded-3xl flex flex-wrap justify-between items-center gap-6">
+                <div>
+                  <span class="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold uppercase tracking-widest">
+                    ROOM STATUS: ${room.status} ${room.isLocked ? '(LOCKED 🔒)' : ''}
+                  </span>
+                  <p class="text-xs text-purple-200 uppercase tracking-widest mt-3">PIN PERMAINAN:</p>
+                  <h2 class="text-6xl font-black text-amber-400 tracking-widest my-1">${room.pin}</h2>
+                  <p class="text-sm font-bold text-emerald-400">
+                    ${activePlayers.length} Peserta Bergabung • ${readyCount}/${activePlayers.length} PLAYERS READY
+                  </p>
+                </div>
+
+                <div class="bg-white p-3 rounded-2xl text-center shadow-xl">
+                  <div id="host-qr-box" class="w-32 h-32 mx-auto flex items-center justify-center"></div>
+                  <span class="block text-[10px] font-black text-slate-900 mt-1">SCAN QR JOIN</span>
+                </div>
+
+                ${(room.status === 'PLAYING' || room.status === 'PAUSED') && currentQ ? `
+                  <div class="bg-slate-950/80 border border-white/15 p-5 rounded-2xl max-w-md">
+                    <div class="flex justify-between items-center mb-2">
+                      <span class="text-xs font-black text-amber-400">SOAL #${currentQ.no} / 20 • JAWABAN MASUK: ${answeredCount}/${activePlayers.length}</span>
+                      <span id="live-timer-badge" class="text-2xl font-black px-3 py-0.5 rounded-lg bg-indigo-600">--s</span>
+                    </div>
+                    <p class="text-sm font-bold text-white line-clamp-3">${currentQ.text}</p>
+                  </div>
+                ` : ''}
+
+                <div class="flex flex-col gap-3">
+                  ${room.status === 'WAITING' ? `
+                    <button onclick="hostStartGame('${room.pin}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-8 py-4 rounded-2xl text-xl shadow-2xl">
+                      ▶ START GAME SERENTAK
+                    </button>
+                  ` : ''}
+                  ${room.status === 'PLAYING' || room.status === 'PAUSED' ? `
+                    <button onclick="hostFinishCurrentQuestion('${room.pin}')" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-6 py-3.5 rounded-2xl">
+                      ⏹ KUNCI JAWABAN & TAMPILKAN HASIL
+                    </button>
+                    <button onclick="hostPauseOrResume('${room.pin}')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs">
+                      ${room.status === 'PAUSED' ? '▶ RESUME GAME' : '⏸ PAUSE GAME'}
+                    </button>
+                  ` : ''}
+                  ${room.status === 'QUESTION_RESULT' ? `
+                    <button onclick="hostNextQuestion('${room.pin}')" class="bg-indigo-500 hover:bg-indigo-400 text-white font-black px-8 py-4 rounded-2xl text-lg shadow-xl">
+                      ⏭ ${room.currentQuestionIndex + 1 >= 20 ? 'TAMPILKAN PODIUM JUARA 🏆' : `LANJUT KE SOAL #${room.currentQuestionIndex + 2}`}
+                    </button>
+                  ` : ''}
+                  <button onclick="toggleLockRoom('${room.pin}')" class="bg-white/10 hover:bg-white/20 text-xs font-bold py-2 px-4 rounded-xl">
+                    ${room.isLocked ? '🔓 Unlock Room' : '🔒 Lock Room'}
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl">
+                <h3 class="text-lg font-black mb-4">DAFTAR PESERTA DI ROOM (${activePlayers.length} Orang):</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  ${activePlayers.map((p, idx) => `
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex items-center justify-between">
+                      <div>
+                        <p class="font-bold text-base">#${idx + 1} ${p.avatar} ${p.nickname}</p>
+                        <p class="text-xs text-slate-400">
+                          <span class="text-emerald-400 font-bold">${p.connectionStatus}</span> — 
+                          <span class="${p.readyStatus==='READY'?'text-emerald-300 font-bold':'text-amber-300'}">${p.readyStatus}</span> • 
+                          <strong class="text-amber-400">${p.totalScore.toLocaleString()} pts</strong>
+                        </p>
+                      </div>
+                      <button onclick="const st=getGlobalStore(); st.rooms['${room.pin}'].participants['${p.id}'].isRemoved=true; saveGlobalStore(st);" class="text-xs bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white px-3 py-1.5 rounded-lg font-bold">Kick</button>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `) : ''}
+
+            ${state.ownerTab === 'BANK_SOAL' ? `
+              <div class="space-y-4">
+                <h2 class="text-2xl font-black">20 Soal AI Career Lab & Kunci Jawaban Teracak Seimbang (A=4, B=4, C=4, D=4, E=4)</h2>
+                ${DEFAULT_QUESTIONS.map(q => `
+                  <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-3">
+                    <div class="flex justify-between">
+                      <span class="bg-indigo-600 text-white text-xs font-black px-3 py-1 rounded-lg">SOAL #${q.no}</span>
+                      <span class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black px-3 py-1 rounded-lg">Kunci Acak Baru: ${q.correct} (Kunci Lama: ${q.old_correct})</span>
+                    </div>
+                    <p class="font-bold text-base text-white whitespace-pre-line">${q.text}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                      ${['A','B','C','D','E'].map(lbl => `
+                        <div class="p-2.5 rounded-xl border ${q.correct===lbl ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 font-bold' : 'bg-slate-950 border-slate-800 text-slate-400'}">
+                          <strong>${lbl}.</strong> ${q.options[lbl]}
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            ${state.ownerTab === 'RECAP' ? `
+              <div class="space-y-4">
+                <h2 class="text-2xl font-black">Rekapitulasi Seluruh Peserta</h2>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-x-auto">
+                  <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr class="bg-slate-800/70 text-slate-300 uppercase text-xs">
+                        <th class="p-4">Peserta</th>
+                        <th class="p-4">PIN</th>
+                        <th class="p-4">Rank</th>
+                        <th class="p-4">Skor Akhir</th>
+                        <th class="p-4">B / S / Kosong</th>
+                        <th class="p-4">Akurasi</th>
+                        <th class="p-4">Waktu Rata-rata</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${store.recaps.map(r => `
+                        <tr class="border-t border-slate-800">
+                          <td class="p-4 font-bold">${r.avatar} ${r.nickname}</td>
+                          <td class="p-4 font-mono text-amber-400">${r.pin}</td>
+                          <td class="p-4 font-black">#${r.finalRank}</td>
+                          <td class="p-4 font-bold text-emerald-400">${r.finalScore.toLocaleString()}</td>
+                          <td class="p-4">${r.correctAnswers} / ${r.wrongAnswers} / ${r.unanswered}</td>
+                          <td class="p-4 font-bold">${r.accuracyPercentage}%</td>
+                          <td class="p-4">${r.avgResponseTimeSec}s</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ` : ''}
+
+            ${state.ownerTab === 'HISTORY' ? `
+              <div class="space-y-4">
+                <h2 class="text-2xl font-black">Riwayat Permainan Selesai</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  ${store.history.map(h => `
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-2">
+                      <div class="flex justify-between">
+                        <span class="font-mono text-amber-400 font-black">PIN: ${h.pin}</span>
+                        <span class="text-xs text-slate-400">${h.date}</span>
+                      </div>
+                      <h3 class="font-bold text-lg">${h.quizTitle}</h3>
+                      <p class="text-xs text-slate-300">Peserta: <strong>${h.totalPlayers}</strong> • Rata-rata Skor: <strong>${h.avgScore}</strong> • Rata-rata Akurasi: <strong>${h.avgAccuracy}%</strong></p>
+                      <p class="text-xs text-amber-300">Top 3: ${h.top3.join(' | ')}</p>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </main>
+        </div>
+      `;
+    }
+
+    function renderPlayerArena(root, store, toastHtml) {
+      const room = store.rooms[state.activePin];
+      if (!room) {
+        state.view = 'LANDING';
+        renderApp();
+        return;
+      }
+      const me = room.participants[state.currentParticipantId];
+      if (!me || me.isRemoved) {
+        state.view = 'LANDING';
+        renderApp();
+        return;
+      }
+
+      const activePlayers = Object.values(room.participants)
+        .filter((p) => !p.isRemoved)
+        .sort((a, b) => b.totalScore - a.totalScore);
+      const readyCount = activePlayers.filter((p) => p.readyStatus === 'READY').length;
+      const currentQ = DEFAULT_QUESTIONS[room.currentQuestionIndex];
+      const myAns = currentQ ? me.answers[currentQ.no] : null;
+
+      root.innerHTML = `
+        ${toastHtml}
+        <div id="live-countdown-overlay" class="hidden fixed inset-0 bg-indigo-950/95 z-50 flex flex-col items-center justify-center"></div>
+
+        <div class="min-h-screen p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+          <header class="flex justify-between items-center bg-white/10 backdrop-blur-md px-6 py-3.5 rounded-2xl border border-white/15">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">${me.avatar}</span>
+              <div>
+                <p class="font-black text-lg leading-none">${me.nickname}</p>
+                <span class="text-xs text-emerald-400 font-semibold">● Online — PIN: ${room.pin}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-[11px] uppercase tracking-wider text-purple-200">Total Skor</p>
+              <p class="text-2xl font-black text-amber-400">${me.totalScore.toLocaleString()} pts</p>
+            </div>
+          </header>
+
+          ${room.status === 'WAITING' ? `
+            <div class="bg-white/10 p-8 rounded-3xl border border-white/20 text-center space-y-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-purple-300">ROOM LOBBY — ${room.quizTitle}</p>
+              <h1 class="text-5xl font-black tracking-widest text-amber-400">${room.pin}</h1>
+              <p class="text-base font-bold">${activePlayers.length} PLAYERS JOINED • ${readyCount}/${activePlayers.length} PLAYERS READY</p>
+              <div class="pt-4">
+                <button onclick="togglePlayerReady()" class="px-10 py-4 rounded-2xl font-black text-xl shadow-xl transition ${me.readyStatus==='READY' ? 'bg-emerald-500 text-slate-950' : 'bg-amber-400 text-slate-950 animate-pulse'}">
+                  ${me.readyStatus==='READY' ? '✓ SAYA SUDAH SIAP (READY)' : "TEKAN: SAYA SIAP / I'M READY"}
+                </button>
+                <p class="text-xs text-purple-200 mt-3">Menunggu Host memulai permainan serentak...</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/80 p-6 rounded-3xl border border-white/10">
+              <h2 class="font-black text-base text-amber-400 mb-3">DAFTAR PESERTA DI ROOM INI:</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                ${activePlayers.map(p => `
+                  <div class="flex items-center justify-between bg-white/5 px-4 py-3 rounded-xl border border-white/10">
+                    <span class="font-bold truncate">${p.avatar} ${p.nickname}</span>
+                    <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${p.readyStatus==='READY' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">${p.readyStatus}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${room.status === 'PAUSED' ? `
+            <div class="bg-amber-500/20 border-2 border-amber-400 p-8 rounded-3xl text-center">
+              <h2 class="text-3xl font-black text-amber-300">⏸ PERMAINAN DIJEDA OLEH HOST</h2>
+              <p class="text-sm text-white/80 mt-2">Skor dan jawaban Anda tersimpan aman. Menunggu Host melanjutkan permainan...</p>
+            </div>
+          ` : ''}
+
+          ${room.status === 'PLAYING' && currentQ ? `
+            <div class="flex justify-between items-center bg-slate-900/90 px-6 py-4 rounded-2xl border border-white/15">
+              <span class="font-black text-amber-400 text-lg">PERTANYAAN ${currentQ.no} / 20</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs uppercase text-white/70">Sisa Waktu:</span>
+                <span id="live-timer-badge" class="text-3xl font-black px-4 py-1 rounded-xl bg-indigo-600">--s</span>
+              </div>
+            </div>
+
+            <div class="bg-white text-slate-950 p-6 md:p-8 rounded-3xl shadow-2xl">
+              <p class="text-lg md:text-2xl font-extrabold whitespace-pre-line leading-relaxed">${currentQ.text}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${['A','B','C','D','E'].map(lbl => {
+                const isSelected = myAns && myAns.selectedLabel === lbl;
+                return `
+                  <button ${myAns ? 'disabled' : ''} onclick="submitPlayerAnswer('${lbl}')" class="${OPTION_COLORS[lbl]} p-5 rounded-2xl border-b-8 text-left transition-all flex items-start gap-4 ${lbl==='E'?'md:col-span-2':''} ${myAns && !isSelected ? 'opacity-35 scale-95' : 'scale-100 shadow-lg'}">
+                    <span class="w-11 h-11 rounded-xl bg-black/25 flex items-center justify-center text-xl font-black shrink-0 text-white">${lbl}</span>
+                    <span class="text-base md:text-lg font-bold leading-snug my-auto">${currentQ.options[lbl]}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            ${myAns ? `
+              <div class="text-center bg-emerald-500/20 border border-emerald-400/50 p-4 rounded-2xl">
+                <p class="font-bold text-emerald-300">✓ Pilihan ${myAns.selectedLabel} terkunci! Menunggu seluruh peserta selesai...</p>
+              </div>
+            ` : ''}
+          ` : ''}
+
+          ${room.status === 'QUESTION_RESULT' && currentQ ? `
+            <div class="p-6 rounded-3xl text-center border-2 ${myAns?.isCorrect ? 'bg-emerald-600/30 border-emerald-400' : 'bg-rose-600/30 border-rose-400'}">
+              <h2 class="text-3xl font-black">${myAns?.isCorrect ? `🎉 JAWABAN BENAR! +${myAns.pointsAwarded} Poin` : '❌ JAWABAN SALAH / TIDAK DIJAWAB (+0 Poin)'}</h2>
+              <p class="mt-2 text-sm bg-black/30 inline-block px-4 py-2 rounded-xl text-amber-300 font-bold">
+                Kunci Jawaban Benar: ${currentQ.correct}. ${currentQ.options[currentQ.correct]}
+              </p>
+            </div>
+
+            <div class="bg-slate-900/90 p-6 rounded-3xl border border-white/15">
+              <h3 class="text-xl font-black text-center text-amber-400 mb-4">🏆 LIVE LEADERBOARD (TOP 10)</h3>
+              <div class="space-y-2">
+                ${activePlayers.slice(0, 10).map((p, idx) => `
+                  <div class="flex items-center justify-between px-5 py-3 rounded-2xl ${p.id===me.id ? 'bg-indigo-600 border-2 border-amber-400' : 'bg-white/5'}">
+                    <div class="flex items-center gap-4">
+                      <span class="w-8 font-black text-lg text-amber-400">#${idx + 1}</span>
+                      <span class="text-2xl">${p.avatar}</span>
+                      <span class="font-bold">${p.nickname}</span>
+                    </div>
+                    <span class="font-black text-lg">${p.totalScore.toLocaleString()} pts</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${room.status === 'FINISHED' ? `
+            <div class="text-center">
+              <h1 class="text-4xl font-black text-amber-400">🎊 PODIUM JUARA & HASIL AKHIR 🎊</h1>
+            </div>
+
+            <div class="flex items-end justify-center gap-4 md:gap-8 pt-6">
+              ${activePlayers[1] ? `
+                <div class="flex flex-col items-center">
+                  <span class="text-4xl mb-1">${activePlayers[1].avatar}</span>
+                  <p class="font-bold">${activePlayers[1].nickname}</p>
+                  <p class="text-xs text-slate-300 mb-2">${activePlayers[1].totalScore.toLocaleString()} pts</p>
+                  <div class="w-28 md:w-36 h-36 bg-gradient-to-t from-slate-500 to-slate-300 text-slate-950 rounded-t-2xl flex flex-col items-center justify-center font-black">
+                    <span class="text-3xl">🥈</span><span>JUARA 2</span>
+                  </div>
+                </div>
+              ` : ''}
+              ${activePlayers[0] ? `
+                <div class="flex flex-col items-center">
+                  <span class="text-4xl animate-bounce">👑</span>
+                  <span class="text-5xl mb-1">${activePlayers[0].avatar}</span>
+                  <p class="font-black text-lg text-amber-300">${activePlayers[0].nickname}</p>
+                  <p class="text-xs text-amber-200 mb-2">${activePlayers[0].totalScore.toLocaleString()} pts</p>
+                  <div class="w-32 md:w-44 h-48 bg-gradient-to-t from-amber-600 to-amber-300 text-slate-950 rounded-t-2xl flex flex-col items-center justify-center font-black border-2 border-white">
+                    <span class="text-4xl">🏆</span><span class="text-xl">JUARA 1</span>
+                  </div>
+                </div>
+              ` : ''}
+              ${activePlayers[2] ? `
+                <div class="flex flex-col items-center">
+                  <span class="text-4xl mb-1">${activePlayers[2].avatar}</span>
+                  <p class="font-bold">${activePlayers[2].nickname}</p>
+                  <p class="text-xs text-amber-500 mb-2">${activePlayers[2].totalScore.toLocaleString()} pts</p>
+                  <div class="w-28 md:w-36 h-28 bg-gradient-to-t from-amber-800 to-amber-600 text-white rounded-t-2xl flex flex-col items-center justify-center font-black">
+                    <span class="text-3xl">🥉</span><span>JUARA 3</span>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="bg-white/10 p-6 rounded-3xl border border-white/20 space-y-4">
+              <h3 class="text-xl font-black text-amber-400">📊 Rapor Detail Jawaban Pribadi Anda (${me.nickname})</h3>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr class="border-b border-white/20 text-xs uppercase text-purple-300">
+                      <th class="py-2">No.</th>
+                      <th class="py-2">Jawaban Anda</th>
+                      <th class="py-2">Kunci Benar</th>
+                      <th class="py-2">Hasil</th>
+                      <th class="py-2 text-right">Poin</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${DEFAULT_QUESTIONS.map(q => {
+                      const a = me.answers[q.no];
+                      return `
+                        <tr class="border-b border-white/10">
+                          <td class="py-2 font-bold">Soal #${q.no}</td>
+                          <td class="py-2 font-bold">${a ? 'Pilihan ' + a.selectedLabel : 'Tidak Dijawab'}</td>
+                          <td class="py-2 text-amber-300 font-bold">Pilihan ${q.correct}</td>
+                          <td class="py-2 ${a?.isCorrect ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}">${a?.isCorrect ? '✓ Benar' : '✗ Salah'}</td>
+                          <td class="py-2 text-right font-black text-amber-400">+${a ? a.pointsAwarded : 0}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    renderApp();
+  </script>
+</body>
+</html>
